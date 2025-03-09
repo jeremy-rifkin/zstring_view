@@ -148,7 +148,7 @@ namespace std {
             return size_;
         }
         constexpr size_type max_size() const noexcept {
-            return (npos - sizeof(size_type) - sizeof(void*)) / sizeof(value_type) / 4;
+            return basic_string_view<charT, traits>{}.max_size() - 1;
         }
         [[nodiscard]] constexpr bool empty() const noexcept {
             return size_ == 0;
