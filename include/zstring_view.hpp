@@ -14,10 +14,12 @@ namespace std {
     template<class charT, class traits = char_traits<charT>>
     class basic_zstring_view;                                              // partially freestanding
 
-    template<class charT, class traits>
-        constexpr bool ranges::enable_view<basic_zstring_view<charT, traits>> = true;
-    template<class charT, class traits>
-        constexpr bool ranges::enable_borrowed_range<basic_zstring_view<charT, traits>> = true;
+    namespace ranges {
+        template<class charT, class traits>
+            constexpr bool enable_view<basic_zstring_view<charT, traits>> = true;
+        template<class charT, class traits>
+            constexpr bool enable_borrowed_range<basic_zstring_view<charT, traits>> = true;
+    }
 
     // [zstring.view.comparison], non-member comparison functions
     template<class charT, class traits>
@@ -90,7 +92,7 @@ namespace std {
         using const_pointer          = const value_type*;
         using reference              = value_type&;
         using const_reference        = const value_type&;
-        using const_iterator         = const char*; // see [zstring.view.iterators]
+        using const_iterator         = const charT*; // see [zstring.view.iterators]
         using iterator               = const_iterator;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
         using reverse_iterator       = const_reverse_iterator;
@@ -99,7 +101,10 @@ namespace std {
         static constexpr size_type npos = size_type(-1);
 
         // [zstring.view.cons], construction and assignment
-        constexpr basic_zstring_view() noexcept;
+        constexpr basic_zstring_view() noexcept : size_() {
+            static const charT empty_string[1]{};
+            data_ = std::data(empty_string);
+        }
         constexpr basic_zstring_view(const basic_zstring_view&) noexcept = default;
         constexpr basic_zstring_view& operator=(const basic_zstring_view&) noexcept = default;
         constexpr basic_zstring_view(const charT* str) : basic_zstring_view(str, traits::length(str)) {}
@@ -340,7 +345,7 @@ namespace std {
         basic_zstring_view<charT, traits> x,
         type_identity_t<basic_zstring_view<charT, traits>> y
     ) noexcept {
-        return basic_string_view<charT, traits>(x) == basic_string_view<charT, traits>(x);
+        return basic_string_view<charT, traits>(x) == basic_string_view<charT, traits>(y);
     }
 
     template<class charT, class traits>
@@ -348,7 +353,7 @@ namespace std {
         basic_zstring_view<charT, traits> x,
         type_identity_t<basic_zstring_view<charT, traits>> y
     ) noexcept {
-        return basic_string_view<charT, traits>(x) <=> basic_string_view<charT, traits>(x);
+        return basic_string_view<charT, traits>(x) <=> basic_string_view<charT, traits>(y);
     }
 
     template<class charT, class traits>
@@ -410,7 +415,7 @@ namespace std {
     template<class charT, class traits>
     struct formatter<basic_zstring_view<charT, traits>, charT> {
         formatter() = default;
-        constexpr auto parse(basic_format_parse_context<char>& context) {
+        constexpr auto parse(basic_format_parse_context<charT>& context) {
             return sv_formatter.parse(context);
         }
         template<typename _Out>
@@ -418,7 +423,7 @@ namespace std {
             return sv_formatter.format(zsv, context);
         }
     private:
-        formatter<basic_string_view<charT, traits>> sv_formatter;
+        formatter<basic_string_view<charT, traits>, charT> sv_formatter;
     };
 }
 
